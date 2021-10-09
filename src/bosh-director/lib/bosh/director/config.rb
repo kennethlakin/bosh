@@ -89,7 +89,7 @@ module Bosh::Director
       end
 
       def configure(config)
-        file = File.open("/tmp/migration_output.log", 'wa')
+        file = File.open("/tmp/migration_output.log", 'a')
         file.puts Time.now
         counter = 0
         nil.tap { file.puts "COUNTER: #{counter+=1}: #{caller_locations(2,1).first}" }
