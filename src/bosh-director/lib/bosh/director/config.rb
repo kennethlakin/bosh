@@ -89,23 +89,24 @@ module Bosh::Director
       end
 
       def configure(config)
+        file = File.open("/tmp/migration_output.log", 'w')
         counter = 0
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @max_vm_create_tries = Integer(config.fetch('max_vm_create_tries', 5))
         @flush_arp = config.fetch('flush_arp', false)
 
         @base_dir = config['dir']
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         # checkpoint task progress every 30 secs
         @task_checkpoint_interval = 30
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         logging_config = config.fetch('logging', {})
         logging_file = ENV['BOSH_DIRECTOR_LOG_FILE'] || logging_config.fetch('file', nil)
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         if logging_file
-          puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+          file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
           @log_file_path = logging_file
           shared_appender = Logging.appenders.file(
             'Director',
@@ -113,45 +114,45 @@ module Bosh::Director
             layout: ThreadFormatter.layout
           )
         else
-          puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+          file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
           shared_appender = Logging.appenders.io(
             'Director',
             $stdout,
             layout: ThreadFormatter.layout
           )
         end
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
 
         shared_appender.add_filters(
           Bosh::Common::Logging.null_query_filter,
           Bosh::Common::Logging.query_redaction_filter,
         )
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
 
         @logger = Logging::Logger.new('Director')
         @logger.add_appenders(shared_appender)
         @logger.level = Logging.levelify(logging_config.fetch('level', 'debug'))
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @audit_log_path = config['audit_log_path']
 
         # Event logger supposed to be overridden per task,
         # the default one does nothing
         @event_log = EventLog::Log.new
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         # by default keep only last 2000 tasks of each type in disk
         @max_tasks = config.fetch('max_tasks', 2000).to_i
 
         @max_threads = config.fetch('max_threads', 32).to_i
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @revision = get_revision
         @version = config['version']
 
         @logger.info("Starting BOSH Director: #{@version} (#{@revision})")
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @process_uuid = SecureRandom.uuid
         @nats_uri = config['mbus']
         @nats_server_ca_path = config['nats']['server_ca_path']
@@ -159,38 +160,38 @@ module Bosh::Director
         @nats_client_private_key_path = config['nats']['client_private_key_path']
         @nats_client_ca_certificate_path = config['nats']['client_ca_certificate_path']
         @nats_client_ca_private_key_path = config['nats']['client_ca_private_key_path']
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @nats_server_ca = File.read(@nats_server_ca_path)
         nats_client_ca_certificate = File.read(@nats_client_ca_certificate_path)
         nats_client_ca_private_key = File.read(@nats_client_ca_private_key_path)
         @nats_config_fingerprint = Digest::SHA1.hexdigest("#{nats_client_ca_certificate}#{nats_client_ca_private_key}#{@nats_server_ca}")
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @blobstore_config_fingerprint = Digest::SHA1.hexdigest(config.fetch('blobstore').to_s)
 
         @director_certificate_expiry_json_path = config['director_certificate_expiry_json_path']
 
         @default_ssh_options = config['default_ssh_options']
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @cloud_options = config['cloud']
         agent_config = config.fetch('agent', {})
         @agent_env = agent_config.fetch('env', {}).fetch('bosh', {})
 
         @agent_wait_timeout = agent_config.fetch('agent_wait_timeout', 600)
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @compiled_package_cache_options = config['compiled_package_cache']
         @name = config['name'] || ''
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @runtime = config.fetch('runtime', {})
         @runtime['ip'] ||= '127.0.0.1'
         @runtime['instance'] ||= 'unknown'
 
         @compiled_package_cache = nil
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @db_config = config['db']
         @db = configure_db(config['db'])
         @dns = config['dns']
@@ -212,19 +213,19 @@ module Bosh::Director
           end
         end
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @local_dns_enabled = config.fetch('local_dns', {}).fetch('enabled', false)
         @local_dns_include_index = config.fetch('local_dns', {}).fetch('include_index', false)
         @local_dns_use_dns_addresses = config.fetch('local_dns', {}).fetch('use_dns_addresses', false)
 
         @network_lifecycle_enabled = config.fetch('networks', {}).fetch('enable_cpi_management', false)
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         # UUID in config *must* only be used for tests
         @uuid = config['uuid'] || Bosh::Director::Models::DirectorAttribute.find_or_create_uuid(@logger)
         @logger.info("Director UUID: #{@uuid}")
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @fix_stateful_nodes = config.fetch('scan_and_fix', {})
           .fetch('auto_fix_stateful_nodes', false)
         @enable_snapshots = config.fetch('snapshots', {}).fetch('enabled', false)
@@ -232,7 +233,7 @@ module Bosh::Director
         @trusted_certs = config['trusted_certs'] || ''
         @ignore_missing_gateway = config['ignore_missing_gateway']
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @keep_unreachable_vms = config.fetch('keep_unreachable_vms', false)
         @enable_post_deploy = config.fetch('enable_post_deploy', true)
         @enable_nats_delivered_templates = config.fetch('enable_nats_delivered_templates', false)
@@ -240,16 +241,16 @@ module Bosh::Director
         @remove_dev_tools = config['remove_dev_tools']
         @record_events = config.fetch('record_events', false)
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @enable_virtual_delete_vms = config.fetch('enable_virtual_delete_vms', false)
 
         @director_ips = Socket.ip_address_list.reject { |addr| !addr.ip? || addr.ipv4_loopback? || addr.ipv6_loopback? || addr.ipv6_linklocal? }.map { |addr| addr.ip_address }
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @config_server = config.fetch('config_server', {})
         @config_server_enabled = @config_server['enabled']
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         if @config_server_enabled
           config_server_url = config_server['url']
           unless URI.parse(config_server_url).scheme == 'https'
@@ -257,7 +258,7 @@ module Bosh::Director
           end
         end
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         @lock = Monitor.new
 
         if config['verify_multidigest_path'].nil?
@@ -268,7 +269,7 @@ module Bosh::Director
         @default_update_vm_strategy = config.fetch('default_update_vm_strategy', nil)
         @parallel_problem_resolution = config.fetch('parallel_problem_resolution', true)
 
-        puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
+        file.puts "COUNTER: #{counter+=1}: #{caller_locations(1, 1).first.lineno}"
         cpi_config = config.fetch('cpi')
         max_cpi_api_version = cpi_config.fetch('max_supported_api_version')
         @preferred_cpi_api_version = [max_cpi_api_version, cpi_config.fetch('preferred_api_version')].min
