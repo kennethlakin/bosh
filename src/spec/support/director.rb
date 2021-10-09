@@ -125,6 +125,8 @@ module Bosh::Spec
         @nats_client = NATS::IO::Client.new
         @nats_client.connect(@director_nats_config)
         @nats_client.subscribe('>') do |msg, reply, sub|
+          puts "Nats Message #{"!" * 30}"
+          puts msg
           @nats_recording << [sub, msg]
         end
       end
