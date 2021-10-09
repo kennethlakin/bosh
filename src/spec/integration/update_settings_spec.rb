@@ -4,6 +4,7 @@ describe 'update settings configuration', type: :integration do
   with_reset_sandbox_before_each
 
   it 'should update the trusted certificates if they were changed' do
+    puts 'START OF TEST'
     manifest_hash = Bosh::Spec::Deployments.simple_manifest_with_instance_groups
     deploy_from_scratch(cloud_config_hash: Bosh::Spec::Deployments.simple_cloud_config, manifest_hash: manifest_hash)
 
@@ -11,6 +12,7 @@ describe 'update settings configuration', type: :integration do
     current_sandbox.director_service.stop
     current_sandbox.director_service.start(current_sandbox.director_config)
 
+    puts 'START RECORDING'
     director.start_recording_nats
     deploy_simple_manifest(manifest_hash: manifest_hash)
 
