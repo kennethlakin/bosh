@@ -92,7 +92,7 @@ module Bosh::Dev::Sandbox
       @sandbox_log_file = STDOUT unless ENV.fetch('LOG_STDOUT', '').empty?
       @logger = Logging.logger(@sandbox_log_file)
 
-      @logger.level = ENV.fetch('LOG_LEVEL', 'DEBUG')
+      @logger.level = 'DEBUG'
 
       @dns_db_path = sandbox_path('director-dns.sqlite')
       @task_logs_dir = sandbox_path('boshdir/tasks')
